@@ -43,7 +43,7 @@ namespace tspec_example
                 Console.WriteLine(line);
             }
 
-            if (!results.All(r => r.Success))
+            if (!report.Success)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine("Error running example.");

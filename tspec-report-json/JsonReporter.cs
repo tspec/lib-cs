@@ -12,6 +12,7 @@ namespace Tspec.Report.Json
         private int _passed;
         private int _failed;
         private bool _currentSuccess;
+        private bool _success = true;
         private readonly Stopwatch _stopwatch = new Stopwatch();
 
         public JsonReporter(Stream stream)
@@ -54,8 +55,12 @@ namespace Tspec.Report.Json
             if (_currentSuccess)
                 _passed++;
             else
+            {
+                _success = false;
                 _failed++;
+            }
             _writer.WriteEndArray(); // ] // steps
+            _writer.WriteBoolean("success", _currentSuccess);
             _writer.WriteEndObject(); // } // spec
         }
 
@@ -66,8 +71,11 @@ namespace Tspec.Report.Json
             _writer.WriteString("duration", _stopwatch.Elapsed.ToString());
             _writer.WriteNumber("passed", _passed);
             _writer.WriteNumber("failed", _failed);
+            _writer.WriteBoolean("success", _success);
             _writer.WriteEndObject(); // } // root
             _writer.Flush();
         }
+
+        public bool Success => _success;
     }
 }
