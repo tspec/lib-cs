@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace TSpec.Lib
+namespace Tspec.Core
 {
     public class Row
     {

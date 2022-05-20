@@ -16,7 +16,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\tspec-lib\tspec-lib.csproj" />
+      <ProjectReference Include="..\tspec-core\tspec-core.csproj" />
+      <ProjectReference Include="..\tspec-report-json\tspec-report-json.csproj" />
     </ItemGroup>
 
 </Project>

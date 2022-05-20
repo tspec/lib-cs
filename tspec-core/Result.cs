@@ -1,6 +1,6 @@
 using System;
 
-namespace TSpec.Lib
+namespace Tspec.Core
 {
     public class Result
     {

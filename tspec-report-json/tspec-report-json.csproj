@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <RootNamespace>Tspec.Report.Json</RootNamespace>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PackageId>tspec.report.json</PackageId>
+        <PackageVersion>1.0.2-preview1</PackageVersion>
+        <Authors>Tspec Project</Authors>
+        <Description>Note that this is still an alpha quality package and might not be useful at all. Tspec is a simple language to define and maintain actions in plain text files.</Description>
+        <Copyright>Copyright (c) Ziya Suzen 2021,2022</Copyright>
+        <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+        <PackageProjectUrl>https://tspec.org</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/tspec/lib-cs</RepositoryUrl>
+        <PackageIcon>tspec-logo@128px.png</PackageIcon>
+        <PackageTags>test,testing,automation,text,plain</PackageTags>
+        <PackageReleaseNotes>This is an alpha release with very little functionality.</PackageReleaseNotes>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="../tspec-logo@128px.png" Pack="true" Visible="false" PackagePath="" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\tspec-core\tspec-core.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="System.Text.Json" Version="4.6.0" />
+    </ItemGroup>
+
+</Project>

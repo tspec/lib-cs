@@ -8,7 +8,14 @@
 
     <ItemGroup>
         <PackageReference Include="FluentAssertions" Version="4.17.0" />
-      <ProjectReference Include="..\tspec-lib\tspec-lib.csproj" />
+      <ProjectReference Include="..\tspec-core\tspec-core.csproj" />
+      <ProjectReference Include="..\tspec-report-json\tspec-report-json.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Demo.tspec.md">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

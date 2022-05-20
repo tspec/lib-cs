@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TSpec.Lib
+namespace Tspec.Core
 {
     public class Table
     {

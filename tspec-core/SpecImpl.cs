@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace TSpec.Lib
+namespace Tspec.Core
 {
     public class SpecImpl
     {

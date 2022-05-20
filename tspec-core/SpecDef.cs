@@ -1,4 +1,4 @@
-namespace TSpec.Lib
+namespace Tspec.Core
 {
     public class SpecDef
     {
