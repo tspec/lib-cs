@@ -41,6 +41,11 @@ namespace Tspec.Demo
             }
         }
 
+        [Step("Always runs")]
+        public void Always()
+        {
+        }
+        
         private int CountVowels(string word)
         {
             return word.Count(c => _vowels.Contains(c));

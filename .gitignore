@@ -6,3 +6,4 @@ obj/
 *.snupkg
 *.DotSettings*
 *.swp
+dist/

@@ -31,3 +31,7 @@ Here's a step that takes a table
    |Snap  |1          |
    |GoCD  |1          |
    |Rhythm|0          |
+
+___
+
+* Always runs

@@ -13,6 +13,7 @@ namespace Tspec.Core
     public class Spec
     {
         private readonly List<SpecDef> _defs = new List<SpecDef>();
+        private readonly List<SpecDef> _teardowns = new List<SpecDef>();
         private readonly List<SpecImpl> _impls = new List<SpecImpl>();
         private readonly Dictionary<Type, object> _objs = new Dictionary<Type, object>();
 
@@ -30,7 +31,20 @@ namespace Tspec.Core
 
         public void AddStepDefinition(TextReader text)
         {
-            _defs.AddRange(FindIn(text));
+            var separated = false;
+            foreach (var tokenDef in FindIn(text))
+            {
+                if (tokenDef.Separator)
+                {
+                    separated = true;
+                    continue;
+                }
+                
+                if (separated)
+                    _teardowns.Add(tokenDef.SpecDef);
+                else
+                    _defs.Add(tokenDef.SpecDef);
+            }
         }
 
         private IEnumerable<SpecImpl> FindIn(Type type)
@@ -64,7 +78,7 @@ namespace Tspec.Core
                 yield return new SpecImpl
                 {
                     Method = m,
-                    Pattern = pattern
+                    Pattern = $@"^\s*{pattern}\s*$"
                 };
             }
         }
@@ -74,7 +88,13 @@ namespace Tspec.Core
             return assembly.GetTypes().SelectMany(FindIn);
         }
 
-        private IEnumerable<SpecDef> FindIn(TextReader text)
+        class TokenDef
+        {
+            public SpecDef SpecDef;
+            public bool Separator;
+        }
+        
+        private IEnumerable<TokenDef> FindIn(TextReader text)
         {
             SpecDef current = null;
             while (true)
@@ -85,8 +105,12 @@ namespace Tspec.Core
                 // Any line starting with '*' is definition
                 if (Regex.IsMatch(line, @"^\s*\*\s*.+"))
                 {
-                    current = new SpecDef { Text = Regex.Match(line, @"^\s*\*(.+?)$").Groups[1].Value.Trim() };
-                    yield return current;
+                    current = new SpecDef { Text = Regex.Match(line, @"^\s*\*(.+)$").Groups[1].Value.Trim() };
+                    yield return new TokenDef { SpecDef = current };
+                }
+                else if (Regex.IsMatch(line, @"^\s*___+\s*$"))
+                {
+                    yield return new TokenDef { Separator = true };
                 }
 
                 // Add any tables to the current spec
@@ -118,60 +142,91 @@ namespace Tspec.Core
         {
             foreach (var specDef in _defs)
             {
-                var step = _impls.FirstOrDefault(s => Regex.IsMatch(specDef.Text, s.Pattern));
-                if (step == null)
+                var result = RunStep(specDef);
+                yield return result;
+                if (!result.Success) break;
+            }
+            foreach (var specDef in _teardowns)
+            {
+                var result = RunStep(specDef);
+                yield return result;
+                if (!result.Success) break;
+            }
+        }
+
+        private Result RunStep(SpecDef specDef)
+        {
+            var step = _impls.FirstOrDefault(s => Regex.IsMatch(specDef.Text, s.Pattern));
+            if (step == null)
+            {
+                return new Result
                 {
-                    Console.WriteLine($"ERROR: Did not match: {specDef.Text}");
-                    continue;
-                }
-
-                var match = Regex.Match(specDef.Text, step.Pattern);
-
-                var t = step.Method.DeclaringType;
-                if (!_objs.TryGetValue(t, out var obj)) _objs[t] = obj = Activator.CreateInstance(t);
-
-                var parameters = new List<object>();
-
-                foreach (var parameterInfo in step.Method.GetParameters())
-                    if (parameterInfo.ParameterType == typeof(Table))
-                    {
-                        parameters.Add(specDef.Table);
-                    }
-                    else
-                    {
-                        var strValue = match.Groups[parameterInfo.Name].Value;
-                        var value = Convert.ChangeType(strValue, parameterInfo.ParameterType);
-                        parameters.Add(value);
-                    }
-
-                Exception exception = null;
-                try
-                {
-                    step.Method.Invoke(obj, parameters.ToArray());
-                }
-                catch (Exception e)
-                {
-                    exception = e;
-                }
-
-                yield return new Result
-                {
-                    Success = exception == null,
                     Text = specDef.Text,
-                    Exception = exception
+                    Success = false,
+                    Exception = new StepImplementationNotFound(specDef.Text),
                 };
             }
+
+            var match = Regex.Match(specDef.Text, step.Pattern);
+
+            var t = step.Method.DeclaringType;
+            if (!_objs.TryGetValue(t, out var obj)) _objs[t] = obj = Activator.CreateInstance(t);
+
+            var parameters = new List<object>();
+
+            foreach (var parameterInfo in step.Method.GetParameters())
+                if (parameterInfo.ParameterType == typeof(Table))
+                {
+                    parameters.Add(specDef.Table);
+                }
+                else
+                {
+                    var strValue = match.Groups[parameterInfo.Name].Value;
+                    var value = Convert.ChangeType(strValue, parameterInfo.ParameterType);
+                    parameters.Add(value);
+                }
+
+            Exception exception = null;
+            try
+            {
+                step.Method.Invoke(obj, parameters.ToArray());
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+
+            return new Result
+            {
+                Success = exception == null,
+                Text = specDef.Text,
+                Exception = exception
+            };
         }
 
         public void Dump(TextWriter @out)
         {
-            foreach (var impl in _impls) @out.WriteLine(impl);
+            foreach (var impl in _impls)
+                @out.WriteLine(impl);
 
             foreach (var def in _defs)
             {
                 @out.WriteLine(def);
                 if (def.Table != null) @out.WriteLine(def.Table);
             }
+            
+            foreach (var def in _teardowns)
+            {
+                @out.WriteLine($"[tear-down] {def}");
+                if (def.Table != null) @out.WriteLine(def.Table);
+            }
+        }
+    }
+
+    public class StepImplementationNotFound : Exception
+    {
+        public StepImplementationNotFound(string message) : base(message)
+        {
         }
     }
 }

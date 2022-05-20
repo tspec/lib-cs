@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Tspec.Core;
 using Tspec.Report.Json;
@@ -8,7 +9,7 @@ namespace tspec_example
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main()
         {
             var file = "Demo.tspec.md";
             using var textReader = File.OpenText(file);
@@ -21,7 +22,10 @@ namespace tspec_example
             var spec = new Spec();
             spec.AddStepDefinition(textReader);
             spec.AddStepImplementationAssembly(Assembly.GetExecutingAssembly());
-            foreach (var result in spec.Run())
+
+            var results = spec.Run().ToList();
+            
+            foreach (var result in results)
             {
                 report.AddResult(result);
                 Console.WriteLine(result);
@@ -38,6 +42,16 @@ namespace tspec_example
                 if (line == null) break;
                 Console.WriteLine(line);
             }
+
+            if (!results.All(r => r.Success))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("Error running example.");
+                Console.ResetColor();
+                return 1;
+            }
+
+            return 0;
         }
     }
 }
