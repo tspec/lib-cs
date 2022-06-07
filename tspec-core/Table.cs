@@ -19,14 +19,15 @@ namespace Tspec.Core
 
             if (Columns == null) return "[]";
             
-            builder.Append("[|");
+            builder.Append("[ |");
             builder.Append(string.Join("|", Columns));
-            builder.AppendLine("|]");
+            builder.AppendLine("| ]");
 
             foreach (var row in _rows)
             {
-                builder.Append("[|");
-                foreach (var column in Columns) builder.Append($"{row.GetCell(column)}|]");
+                builder.Append("[ |");
+                foreach (var column in Columns) builder.Append($"{row.GetCell(column)}|");
+                builder.Append(" ]");
                 builder.AppendLine();
             }
             

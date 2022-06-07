@@ -51,7 +51,8 @@ namespace Tspec.Core
         {
             foreach (var m in type.GetMethods())
             {
-                var pattern = m.GetCustomAttribute<StepAttribute>()?.Pattern;
+                var text = m.GetCustomAttribute<StepAttribute>()?.Pattern;
+                var pattern = text;
                 if (string.IsNullOrWhiteSpace(pattern)) continue;
                 foreach (var p in m.GetParameters())
                 {
@@ -78,7 +79,8 @@ namespace Tspec.Core
                 yield return new SpecImpl
                 {
                     Method = m,
-                    Pattern = $@"^\s*{pattern}\s*$"
+                    Pattern = $@"^\s*{pattern}\s*$",
+                    Text = text,
                 };
             }
         }
@@ -156,14 +158,23 @@ namespace Tspec.Core
 
         private Result RunStep(SpecDef specDef)
         {
-            var step = _impls.FirstOrDefault(s => Regex.IsMatch(specDef.Text, s.Pattern));
+            var step = _impls.FirstOrDefault(s =>
+            {
+                if (!Regex.IsMatch(specDef.Text, s.Pattern)) return false;
+                
+                var tableParam = s.Method.GetParameters().FirstOrDefault(p => p.ParameterType == typeof(Table));
+
+                if (specDef.Table == null && tableParam == null) return true;
+
+                return specDef.Table != null && Regex.IsMatch(s.Text, $@"<{tableParam?.Name}>\s*$");
+            });
             if (step == null)
             {
                 return new Result
                 {
                     Text = specDef.Text,
                     Success = false,
-                    Exception = new StepImplementationNotFound(specDef.Text),
+                    Exception = new StepImplementationNotFound($"No runner found: {specDef.Text}"),
                 };
             }
 
@@ -200,7 +211,9 @@ namespace Tspec.Core
             {
                 Success = exception == null,
                 Text = specDef.Text,
-                Exception = exception
+                Runner = $"{step.Method.DeclaringType?.FullName}::{step.Method.Name}",
+                Table = specDef.Table,
+                Exception = exception,
             };
         }
 

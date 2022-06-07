@@ -47,6 +47,44 @@ Simple step
         }
 
         [Fact]
+        public void Table_step()
+        {
+            var spec = @"
+Simple step
+
+* Table step1
+
+|name|value|
+|----|----|
+|A|1|
+
+No table
+
+* Table step1
+
+";
+            var spec1 = new Spec();
+            spec1.AddStepImplementation(new Steps());
+            spec1.AddStepDefinition(new StringReader(spec));
+
+            var stringWriter = new StringWriter();
+            spec1.Dump(stringWriter);
+            _out.WriteLine(stringWriter.ToString());
+
+            var results = spec1.Run().ToList();
+            
+            _out.WriteLine("RESULTS:");
+            _out.WriteLine("=========================");
+            foreach (var r in results)
+            {
+                _out.WriteLine($"{r}");
+            }
+            
+            Assert.Equal(2, results.Count);
+            Assert.True(results.All(r => r.Success));
+        }
+        
+        [Fact]
         public void Simple_step_with_tear_downs()
         {
             var spec = @"
@@ -115,6 +153,18 @@ ___
         
         [Step("Simple step2")]
         public void Step2()
+        {
+        }
+        
+        [Step("Table step1 <table>")]
+        public void TableStep1(Table table)
+        {
+            if (table == null)
+                throw new Exception($"Table null in {nameof(TableStep1)}");
+        }
+        
+        [Step("Table step1")]
+        public void TableStep1NoTable()
         {
         }
         
