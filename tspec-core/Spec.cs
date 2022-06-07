@@ -52,7 +52,14 @@ namespace Tspec.Core
             foreach (var m in type.GetMethods())
             {
                 var text = m.GetCustomAttribute<StepAttribute>()?.Pattern;
-                var pattern = text;
+                var pattern = text?
+                    .Replace("\\", "\\\\")
+                    .Replace("(", "\\(")
+                    .Replace(")", "\\)")
+                    .Replace("]", "\\]")
+                    .Replace("[", "\\[")
+                    .Replace("$", "\\$")
+                    .Replace("^", "\\^");
                 if (string.IsNullOrWhiteSpace(pattern)) continue;
                 foreach (var p in m.GetParameters())
                 {
@@ -63,7 +70,7 @@ namespace Tspec.Core
                               t == typeof(short) ||
                               t == typeof(byte) ||
                               t == typeof(float) ||
-                              t == typeof(double) ? @"[\d\.]+"
+                              t == typeof(double) ? @"[\d\.\-\+]+"
                         : t == typeof(string) ? @"(?:[^""\\]|\\.)*"
                         : t == typeof(char) ? @"(?:\\""|[^""])"
                         : null;

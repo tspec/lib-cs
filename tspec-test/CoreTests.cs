@@ -85,6 +85,48 @@ No table
         }
         
         [Fact]
+        public void Param_step1()
+        {
+            var spec = @"
+* Param step1 ""str1"" ""123""
+";
+            ParamStepRunner(spec);
+        }
+
+        [Fact]
+        public void Param_step2()
+        {
+            var spec = @"
+* Param step2 ""$str1"" ""123"" (more ""str2"")
+";
+            ParamStepRunner(spec);
+        }
+
+        
+        private void ParamStepRunner(string spec)
+        {
+            var spec1 = new Spec();
+            spec1.AddStepImplementation(new Steps());
+            spec1.AddStepDefinition(new StringReader(spec));
+
+            var stringWriter = new StringWriter();
+            spec1.Dump(stringWriter);
+            _out.WriteLine(stringWriter.ToString());
+
+            var results = spec1.Run().ToList();
+            
+            _out.WriteLine("RESULTS:");
+            _out.WriteLine("=========================");
+            foreach (var r in results)
+            {
+                _out.WriteLine($"{r}");
+            }
+            
+            Assert.Single(results);
+            Assert.True(results.All(r => r.Success));
+
+        }
+        [Fact]
         public void Simple_step_with_tear_downs()
         {
             var spec = @"
@@ -166,6 +208,21 @@ ___
         [Step("Table step1")]
         public void TableStep1NoTable()
         {
+        }
+        
+        [Step("Param step1 <p1> <p2>")]
+        public void ParamStep1(string p1, int p2)
+        {
+            Assert.Equal("str1", p1);
+            Assert.Equal(123, p2);
+        }
+        
+        [Step("Param step2 <p1> <p2> (more <p3>)")]
+        public void ParamStep2(string p1, int p2, string p3)
+        {
+            Assert.Equal("$str1", p1);
+            Assert.Equal(123, p2);
+            Assert.Equal("str2", p3);
         }
         
         [Step("Tear-down step1")]
