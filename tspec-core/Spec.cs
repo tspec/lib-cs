@@ -70,6 +70,7 @@ namespace Tspec.Core
                               t == typeof(short) ||
                               t == typeof(byte) ||
                               t == typeof(float) ||
+                              t == typeof(decimal) ||
                               t == typeof(double) ? @"[\d\.\-\+]+"
                         : t == typeof(string) ? @"(?:[^""\\]|\\.)*"
                         : t == typeof(char) ? @"(?:\\""|[^""])"
