@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -32,7 +33,7 @@ namespace Tspec.Core
         public void AddStepDefinition(TextReader text)
         {
             var separated = false;
-            foreach (var tokenDef in FindIn(text))
+            foreach (var tokenDef in FindSpecDefinitionsIn(text))
             {
                 if (tokenDef.Separator)
                 {
@@ -104,27 +105,37 @@ namespace Tspec.Core
             public bool Separator;
         }
         
-        private IEnumerable<TokenDef> FindIn(TextReader text)
+        private IEnumerable<TokenDef> FindSpecDefinitionsIn(TextReader text)
         {
             SpecDef current = null;
+            bool stepFound = false;
             while (true)
             {
                 var line = text.ReadLine();
                 if (line == null) break;
 
+                // ignore empty lines
+                if (Regex.IsMatch(line, @"^\s*$"))
+                    continue;
+                
                 // Any line starting with '*' is definition
                 if (Regex.IsMatch(line, @"^\s*\*\s*.+"))
                 {
                     current = new SpecDef { Text = Regex.Match(line, @"^\s*\*(.+)$").Groups[1].Value.Trim() };
+                    stepFound = true;
                     yield return new TokenDef { SpecDef = current };
+                    continue;
                 }
-                else if (Regex.IsMatch(line, @"^\s*___+\s*$"))
+                
+                if (Regex.IsMatch(line, @"^\s*___+\s*$"))
                 {
+                    stepFound = false;
                     yield return new TokenDef { Separator = true };
+                    continue;
                 }
 
                 // Add any tables to the current spec
-                if (current != null && Regex.IsMatch(line, @"^\s*\|"))
+                if (stepFound && Regex.IsMatch(line, @"^\s*\|"))
                 {
                     var strings = line.Split('|');
 
@@ -144,7 +155,11 @@ namespace Tspec.Core
                     else
                         // ..and the values
                         current.Table.AddRow(values);
+
+                    continue;
                 }
+
+                stepFound = false;
             }
         }
 

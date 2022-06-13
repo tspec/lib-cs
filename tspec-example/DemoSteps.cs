@@ -4,7 +4,7 @@ using System.Linq;
 using FluentAssertions;
 using Tspec.Core;
 
-namespace Tspec.Demo
+namespace tspec_example
 {
     public class DemoSteps
     {

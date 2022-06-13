@@ -7,31 +7,38 @@ using Tspec.Report.Json;
 
 namespace tspec_example
 {
-    class Program
+    static class Program
     {
         static int Main()
         {
-            var file = "Demo.tspec.md";
-            using var textReader = File.OpenText(file);
-
             var stream = new MemoryStream();
             var report = new JsonReporter(stream);
             report.StartReport();
-            
-            report.StartSpec(file);
-            var spec = new Spec();
-            spec.AddStepDefinition(textReader);
-            spec.AddStepImplementationAssembly(Assembly.GetExecutingAssembly());
 
-            var results = spec.Run().ToList();
-            
-            foreach (var result in results)
+            //var file = "Demo.tspec.md";
+            foreach (var file in Directory.GetFiles(".", "*.tspec.md"))
             {
-                report.AddResult(result);
-                Console.WriteLine(result);
+                Console.WriteLine("_______________________");
+                Console.WriteLine($"FILE: {file}");
+                
+                using var textReader = File.OpenText(file);
+
+                report.StartSpec(file);
+                var spec = new Spec();
+                spec.AddStepDefinition(textReader);
+                spec.AddStepImplementationAssembly(Assembly.GetExecutingAssembly());
+
+                var results = spec.Run().ToList();
+
+                foreach (var result in results)
+                {
+                    report.AddResult(result);
+                    Console.WriteLine(result);
+                }
+
+                report.EndSpec();
             }
-            
-            report.EndSpec();
+
             report.EndReport();
 
             stream.Position = 0;
